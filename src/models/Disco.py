@@ -28,6 +28,9 @@ class Disco:
     def get_codigoGenero(self):
         return self.__codigoGenero
 
+    def get_numSessao(self):
+        return self.__numSessao
+
     def set_codigo(self, codigo: str):
         self.__codigo = codigo
 

@@ -26,7 +26,8 @@ class UsuariosController:
             sql = "SELECT * FROM usuarios;"
             return self.db.execute_query(sql, (), True, False)
         
-        except:
+        except Error as e:
+            print(f"Ocorreu um erro ao retornar usuarios:{e}")
             return []
 
     def get_by_cpf(self, cpf:str):
@@ -38,7 +39,7 @@ class UsuariosController:
             return self.db.execute_query(sql, params, True, False)
 
         except Error as e:
-            print(e)
+            print(f"Houve um erro ao retornar usuário: {e}")
             
             return []
 
@@ -51,7 +52,7 @@ class UsuariosController:
             return self.db.execute_query(sql, params, True, False)
 
         except Error as e:
-            print(e)
+            print(f"Ocorreu um erro ao retornar usuário: {e}")
             
             return []
 
@@ -76,6 +77,7 @@ class UsuariosController:
             self.db.execute_query(sql, params, False, True)
 
             return True
-        except:
+        except Error as e:
+            print(f"Houve um erro ao tentar remover usuário: {e}")
             return False
 

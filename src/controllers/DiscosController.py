@@ -10,72 +10,61 @@ class DiscosController:
         self.db = Database()
 
     def create(self, disco: Disco):
-        params = (disco.get_codigo(), disco.get_login(), usuario.get_idade(), usuario.get_senha(), usuario.get_cpf(), usuario.get_cargo())
+        params = (disco.get_codigo(), disco.get_numSessao(), disco.get_codigoGenero(), disco.get_titulo(), disco.get_lancamento(), disco.get_diretor(), disco.get_classInd())
 
         try:
-            sql = "INSERT INTO usuarios (coddisco, numsessao, codgenero, titulo, lancamento, diretor, classInd) VALUES (%s, %s, %s, %s, %s, %s, %s);"
+            sql = "INSERT INTO discos (coddisco, numsessao, codgenero, titulo, lancamento, diretor, classInd) VALUES (%s, %s, %s, %s, %s, %s, %s);"
             self.db.execute_query(sql, params, False, True)
 
             return True
         except Error as e:
-            print(f"Erro ao adicionar usuário: {e}")
+            print(f"Erro ao adicionar disco: {e}")
             return False 
 
     def get_all(self):
         try:
-            sql = "SELECT * FROM usuarios;"
+            sql = "SELECT * FROM discos;"
             return self.db.execute_query(sql, (), True, False)
         
-        except:
+        except Error as e:
+            print(f"Ocorreu um erro ao retornar discos: {e}")
             return []
 
-    def get_by_cpf(self, cpf:str):
-        params = (cpf,)
+    def get_by_cpf(self, codigo_disco: int):
+        params = (codigo_disco,)
 
         try:
-            sql = "SELECT * FROM usuarios WHERE cpf = %s;"
+            sql = "SELECT * FROM usuarios WHERE coddisco = %s;"
 
             return self.db.execute_query(sql, params, True, False)
 
         except Error as e:
-            print(e)
+            print(f"Houve um erro ao retornar discos: {e}")
             
             return []
 
-    def get_by_login(self, login:str):
-        params = (login,)
+    def update(self, disco: Disco):
+        params = (disco.get_numSessao(), disco.get_codigoGenero(), disco.get_titulo(), disco.get_lancamento(), disco.get_diretor(), disco.get_classInd(), disco.get_codigo())
 
         try:
-            sql = "SELECT * FROM usuarios WHERE login = %s;"
-
-            return self.db.execute_query(sql, params, True, False)
-
-        except Error as e:
-            print(e)
-            
-            return []
-
-    def update(self, usuario: Usuario):
-        params = (usuario.get_nome(), usuario.get_login(), usuario.get_idade(), usuario.get_senha(), usuario.get_cargo(), usuario.get_cpf())
-
-        try:
-            sql = "UPDATE usuarios SET nome= %s, login= %s, idade= %s, senha= %s, cargo = %s WHERE cpf = %s;"
+            sql = "UPDATE discos SET numsessao = %s, codgenero = %s, titulo = %s, lancamento = %s, diretor = %s, classInd = %s  WHERE coddisco = %s;"
             self.db.execute_query(sql, params, False, True)
 
             return True
         except Error as e:
-            print(f"Ocorreu um erro:{e}")
+            print(f"Ocorreu um erro ao alterar disco:{e}")
             
             return False
 
-    def delete(self, cpf:str):
-        params = (cpf,)
+    def delete(self, codigo_disco:int):
+        params = (codigo_disco,)
 
         try:
-            sql = "DELETE FROM usuarios WHERE cpf = %s;"
+            sql = "DELETE FROM discos WHERE coddisco = %s;"
             self.db.execute_query(sql, params, False, True)
 
             return True
-        except:
+        except Error as e:
+            print(f"Houve um erro ao remover disco:  {e}")
             return False
 
