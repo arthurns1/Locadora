@@ -1,0 +1,27 @@
+Emprestimos{
+    cpfcliente,
+    codemprestimo,
+    prazo,
+    dataemprestimo
+}
+
+Generos{
+    codgenero,
+    descricao
+}
+
+Sessoes{
+    numero,
+    corredor
+}
+
+emprestimodisco{
+    coddisco,
+    codemprestimo,
+    quantidade
+}
+
+sessaogenero{
+    codgenero,
+    numsessao
+}
