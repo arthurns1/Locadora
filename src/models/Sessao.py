@@ -3,7 +3,7 @@ class Sessao:
         self.__numero = numero
         self.__corredor = corredor
 
-    def get_corredor(self):
+    def get_numero(self):
         return self.__numero
 
     def get_corredor(self):

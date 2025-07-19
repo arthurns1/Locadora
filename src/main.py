@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QStackedWidget, QGridLayout, QPushButton, QLineEdit
 from PyQt5.QtCore import Qt
-from controllers.usuariosController import UsuariosController
+from controllers.UsuariosController import UsuariosController
 from models.Usuario import Usuario
 
 usuariosController = UsuariosController()

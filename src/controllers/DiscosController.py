@@ -10,10 +10,10 @@ class DiscosController:
         self.db = Database()
 
     def create(self, disco: Disco):
-        params = (disco.get_codigo(), disco.get_numSessao(), disco.get_codigoGenero(), disco.get_titulo(), disco.get_lancamento(), disco.get_diretor(), disco.get_classInd())
+        params = (disco.get_numSessao(), disco.get_codigoGenero(), disco.get_titulo(), disco.get_lancamento(), disco.get_diretor(), disco.get_classInd())
 
         try:
-            sql = "INSERT INTO discos (coddisco, numsessao, codgenero, titulo, lancamento, diretor, classInd) VALUES (%s, %s, %s, %s, %s, %s, %s);"
+            sql = "INSERT INTO discos (codigo_disco, num_sessao, cod_genero, titulo, lancamento, diretor, classInd) VALUES (DEFAULT, %s, %s, %s, %s, %s, %s);"
             self.db.execute_query(sql, params, False, True)
 
             return True
@@ -30,11 +30,11 @@ class DiscosController:
             print(f"Ocorreu um erro ao retornar discos: {e}")
             return []
 
-    def get_by_cpf(self, codigo_disco: int):
+    def get_by_codigo(self, codigo_disco: int):
         params = (codigo_disco,)
 
         try:
-            sql = "SELECT * FROM usuarios WHERE coddisco = %s;"
+            sql = "SELECT * FROM discos WHERE codigo_disco = %s;"
 
             return self.db.execute_query(sql, params, True, False)
 
@@ -47,7 +47,7 @@ class DiscosController:
         params = (disco.get_numSessao(), disco.get_codigoGenero(), disco.get_titulo(), disco.get_lancamento(), disco.get_diretor(), disco.get_classInd(), disco.get_codigo())
 
         try:
-            sql = "UPDATE discos SET numsessao = %s, codgenero = %s, titulo = %s, lancamento = %s, diretor = %s, classInd = %s  WHERE coddisco = %s;"
+            sql = "UPDATE discos SET num_sessao = %s, cod_genero = %s, titulo = %s, lancamento = %s, diretor = %s, classInd = %s  WHERE codigo_disco = %s;"
             self.db.execute_query(sql, params, False, True)
 
             return True
@@ -60,11 +60,10 @@ class DiscosController:
         params = (codigo_disco,)
 
         try:
-            sql = "DELETE FROM discos WHERE coddisco = %s;"
+            sql = "DELETE FROM discos WHERE codigo_disco = %s;"
             self.db.execute_query(sql, params, False, True)
 
             return True
         except Error as e:
             print(f"Houve um erro ao remover disco:  {e}")
             return False
-

@@ -7,7 +7,7 @@ class EmprestimoDisco:
     def get_codDisco(self):
         return self.__codDisco
 
-    def codEmprestimo(self):
+    def get_codEmprestimo(self):
         return self.__codEmprestimo
 
     def get_quantidade(self):
