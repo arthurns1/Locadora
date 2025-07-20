@@ -13,7 +13,7 @@ class DiscosController:
         params = (disco.get_numSessao(), disco.get_codigoGenero(), disco.get_titulo(), disco.get_lancamento(), disco.get_diretor(), disco.get_classInd())
 
         try:
-            sql = "INSERT INTO discos (codigo_disco, num_sessao, cod_genero, titulo, lancamento, diretor, classInd) VALUES (DEFAULT, %s, %s, %s, %s, %s, %s);"
+            sql = "INSERT INTO discos (codigo_disco, num_sessao, cod_genero, titulo, lancamento, diretor, class_ind) VALUES (DEFAULT, %s, %s, %s, %s, %s, %s);"
             self.db.execute_query(sql, params, False, True)
 
             return True

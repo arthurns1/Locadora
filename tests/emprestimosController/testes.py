@@ -1,17 +1,15 @@
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '...')))
-from src.models.Usuario import Usuario
-from src.controllers.UsuariosController import UsuariosController
-from src.controllers.SessaoController import SessaoController
+from src.models.Emprestimo import Emprestimo
+from src.controllers.EmprestimosController import EmprestimosController
 
+emprestimosController = EmprestimosController()
 
-usuariosController = UsuariosController()
-
-cpf = "99999999998"
+codigo_emprestimo = 1
 
 def teste_create():
-    usuario = Usuario("Teste", "teste", 20, "123456", cpf, "Usuario")
+    emprestimo = Emprestimo(codigo_emprestimo, "Teste", "2023-01-01", "2023-01-10")
 
     print(usuariosController.create(usuario))
 

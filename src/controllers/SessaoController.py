@@ -10,8 +10,8 @@ class SessaoController:
         self.db = Database()
 
     def create(self, sessao:Sessao):
-        params = (sessao.get_corredor(), sessao.get_numero())
-
+        params = (sessao.get_corredor(),)
+        
         try:
             sql = "INSERT INTO sessoes (numero, corredor) VALUES (DEFAULT, %s);"
             self.db.execute_query(sql, params, False, True)

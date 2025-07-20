@@ -1,14 +1,19 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QStackedWidget, QGridLayout, QPushButton, QLineEdit
+from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QStackedWidget, QGridLayout, QPushButton, QLineEdit, QListWidget, QDateEdit
 from PyQt5.QtCore import Qt
 from controllers.UsuariosController import UsuariosController
-from models.Usuario import Usuario
+from controllers.SessaoController import SessaoController
 
+from models.Usuario import Usuario
+from models.Sessao import Sessao
+
+sessaoController = SessaoController()
 usuariosController = UsuariosController()
 usuario_atual = Usuario("", "", -1, "", "", "")
 
 
 class Login(QWidget):
+    
     def __init__(self, stacked_widget: QStackedWidget):
         super().__init__()
 
@@ -58,7 +63,7 @@ class Login(QWidget):
             self.show_error_message("Usuário não encontrado")
             return False
 
-        if self.usuario[0][4] != self.senha.text():
+        if self.usuario[0][1] != self.senha.text():
             self.show_error_message("Senha incorreta")
             return False
 
@@ -72,8 +77,6 @@ class Login(QWidget):
             global usuario_atual
             usuario_atual = Usuario(self.usuario[0][1], self.usuario[0][2], self.usuario[0][3], self.usuario[0][4], self.usuario[0][0], self.usuario[0][5])
             self.stacked_widget.setCurrentIndex(3)
-              
-
 class Register(QWidget):
     def __init__(self, stacked_widget: QStackedWidget):
         super().__init__()
@@ -123,7 +126,7 @@ class Register(QWidget):
         cpf = self.cpf.text()
 
         if self.check_info(nome, login, idade, senha, cpf):
-            usuario = Usuario(nome, login, int(idade), senha, cpf, "Usuário")
+            usuario = Usuario(nome, login, int(idade), senha, cpf, "")
             usuariosController.create(usuario)
 
         self.stacked_widget.setCurrentIndex(0)    
@@ -138,7 +141,7 @@ class Register(QWidget):
             return False
 
         if len(senha) < 3: 
-            self.show_error_message("Login muito curto")
+            self.show_error_message("Senha muito curta")
             return False
 
         if len(idade) <= 0:
@@ -158,13 +161,164 @@ class Funcionarios(QWidget):
     def __init__(self, stacked_widget:QStackedWidget):
         super().__init__()
         self.stacked_widget = stacked_widget
+        self.voltar = QPushButton("Voltar")
+        self.adicionarFuncionario = QPushButton("Adicionar Funcionário")
+        self.listarFuncionarios = QPushButton("Listar Funcionários")
+
+        self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
+        self.adicionarFuncionario.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(5))
+        self.listarFuncionarios.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(6))
+        
+        self.initUI()
+
+    def initUI(self):
+        layout = QGridLayout()
+
+        layout.addWidget(self.adicionarFuncionario, 0, 0)
+        layout.addWidget(self.listarFuncionarios, 1, 0)
+
+        self.setLayout(layout)
+ 
+class AdicionarFuncionario(QWidget):
+    def __init__(self, stacked_widget: QStackedWidget):
+        super().__init__()
+        self.stacked_widget = stacked_widget
 
         self.voltar = QPushButton("Voltar")
-        self.adicionar = QPushButton("Adicionar Funcionário")
-        self.listar = QPushButton("Listar Funcionários")
-        self.editar = QPushButton("Editar Funcionario")
-        self.remover = QPushButton("Remover Funcionário")
+        self.titleCpf = QLabel("CPF:")
+        self.cpf = QLineEdit()
+        self.titleNome = QLabel("Nome:")
+        self.nome = QLineEdit()
+        self.titleLogin = QLabel("Login:")
+        self.login = QLineEdit()
+        self.titleIdade = QLabel("Idade:")
+        self.idade = QLineEdit()
+        self.titleSenha = QLabel("Senha:")
+        self.senha = QLineEdit()
+        self.titleCargo = QLabel("Cargo:")
+        self.cargo = QListWidget()
+        self.adicionar = QPushButton("Adicionar")
         
+        self.adicionar.clicked.connect(self.handle_adicionar)
+        self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
+
+        self.initUI() 
+
+    def validate_inputs(self):
+        if not self.cpf.text() or not self.nome.text() or not self.login.text() or not self.idade.text() or not self.senha.text() or not self.cargo.currentItem():
+            return False
+        return True
+
+    def handle_adicionar(self):
+        if not self.validate_inputs():
+            return
+
+        funcionario = Usuario(
+            cpf=self.cpf.text(),
+            nome=self.nome.text(),
+            login=self.login.text(),
+            idade=self.idade.text(),
+            senha=self.senha.text(),
+            cargo=self.cargo.currentItem().text()
+        )
+        
+        usuariosController.create(funcionario)
+
+        self.stacked_widget.setCurrentIndex(3)
+        
+    def initUI(self):
+        layout = QGridLayout()
+
+        self.cargo.addItem("Funcionario")
+        self.cargo.addItem("Admin")
+        
+        layout.addWidget(self.voltar, 0, 0)
+        layout.addWidget(self.titleCpf, 1, 0)
+        layout.addWidget(self.cpf, 1, 1)
+        layout.addWidget(self.titleNome, 2, 0)
+        layout.addWidget(self.nome, 2, 1)
+        layout.addWidget(self.titleLogin, 3, 0)
+        layout.addWidget(self.login, 3, 1)
+        layout.addWidget(self.titleIdade, 4, 0)
+        layout.addWidget(self.idade, 4, 1)
+        layout.addWidget(self.titleSenha, 5, 0)
+        layout.addWidget(self.senha, 5, 1)
+        layout.addWidget(self.titleCargo, 6, 0)
+        layout.addWidget(self.cargo, 6, 1)
+        layout.addWidget(self.adicionar, 7, 0)  
+        self.setLayout(layout)
+
+class ListarFuncionario(QWidget):
+    def __init__(self, stacked_widget: QStackedWidget):
+        super().__init__()
+        self.stacked_widget = stacked_widget
+
+        self.voltar = QPushButton("Voltar")
+        self.recarregar = QPushButton("Recarregar")
+
+        self.recarregar.clicked.connect(self.carregar_lista)
+        
+        self.funcionarios = usuariosController.get_all()
+        self.title = QLabel("Listar Funcionários")
+        self.lista = QListWidget()
+        self.remover = QPushButton("Remover")
+        self.editar = QPushButton("Editar")
+        
+        self.remover.clicked.connect(self.handle_click)
+
+        self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
+        
+        self.initUI()
+
+    def initUI(self):
+        layout = QGridLayout()
+
+        self.carregar_lista()
+
+        layout.addWidget(self.recarregar, 0, 1)        
+        layout.addWidget(self.voltar, 0, 0)
+        layout.addWidget(self.title, 1, 0)
+        layout.addWidget(self.lista, 2, 0)
+        layout.addWidget(self.remover, 3, 0)
+        layout.addWidget(self.editar, 3, 1)
+
+        self.setLayout(layout)
+        
+    def handle_click(self):
+        item = self.lista.currentItem()
+        if item:
+            cpf = item.text().split(" - ")[1]
+            usuariosController.delete(cpf)
+            self.carregar_lista()
+
+    def carregar_lista(self):
+        self.lista.clear()
+        funcionarios = usuariosController.get_all()
+        for funcionario in funcionarios:
+            if funcionario[5] == "Funcionario":
+                self.lista.addItem(funcionario[4] + " - " + funcionario[0])
+
+    def handle_editar(self):
+        item = self.lista.currentItem()
+        if item:
+            cpf = item.text().split(" - ")[1]
+            usuario_editar = usuariosController.get_by_cpf(cpf)
+            if usuario_editar:
+                self.stacked_widget.setCurrentIndex(7)
+
+class Sessoes(QWidget):
+    def __init__(self, stacked_widget: QStackedWidget):
+        super().__init__()
+        self.stacked_widget = stacked_widget
+        
+        self.voltar = QPushButton("Voltar")
+        self.adicionar = QPushButton("Adicionar Sessão")
+        self.listar = QPushButton("Listar Sessões")
+
+        self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
+        self.adicionar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(9))
+        self.listar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(10))
+
         self.initUI()
 
     def initUI(self):
@@ -173,12 +327,85 @@ class Funcionarios(QWidget):
         layout.addWidget(self.voltar, 0, 0)
         layout.addWidget(self.adicionar, 1, 0)
         layout.addWidget(self.listar, 2, 0)
-        layout.addWidget(self.editar, 3, 0)
-        layout.addWidget(self.remover, 4, 0)
         self.setLayout(layout)
 
-    def handle_voltar(self):
-        self.stacked_widget.setCurrentIndex(3)
+class AdicionarSessao(QWidget):
+    def __init__(self, stacked_widget: QStackedWidget):
+        super().__init__()
+        self.stacked_widget = stacked_widget
+
+        self.voltar = QPushButton("Voltar")
+        self.titleCorredor = QLabel("Corredor:")
+        self.corredor = QLineEdit()
+        self.adicionar = QPushButton("Adicionar")
+
+        self.adicionar.clicked.connect(self.handle_adicionar)
+        self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
+
+        self.initUI()
+
+    def handle_adicionar(self):
+        sessao = Sessao(0, self.corredor.text())
+        
+        if sessao:
+            sessaoController.create(sessao)
+            self.stacked_widget.setCurrentIndex(3)
+
+    def initUI(self):
+        layout = QGridLayout()
+
+        layout.addWidget(self.voltar, 0, 0)
+        layout.addWidget(self.titleCorredor, 1, 0)
+        layout.addWidget(self.corredor, 1, 1)
+        layout.addWidget(self.adicionar, 2, 0)
+
+        self.setLayout(layout)
+
+class ListarSessoes(QWidget):
+    def __init__(self, stacked_widget: QStackedWidget):
+        super().__init__()
+        self.stacked_widget = stacked_widget
+
+        self.voltar = QPushButton("Voltar")
+        self.recarregar = QPushButton("Recarregar")
+
+        self.recarregar.clicked.connect(self.carregar_lista)
+        
+        self.title = QLabel("Listar Sessões")
+        self.lista = QListWidget()
+        self.remover = QPushButton("Remover")
+        
+        self.remover.clicked.connect(self.handle_click)
+
+        self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
+        
+        self.initUI()
+
+    def initUI(self):
+        layout = QGridLayout()
+
+        self.carregar_lista()
+
+        layout.addWidget(self.recarregar, 0, 1)        
+        layout.addWidget(self.voltar, 0, 0)
+        layout.addWidget(self.title, 1, 0)
+        layout.addWidget(self.lista, 2, 0)
+        layout.addWidget(self.remover, 3, 0)
+
+        self.setLayout(layout)
+
+    def handle_click(self):
+        item = self.lista.currentItem()
+        if item:
+            numero = int(item.text().split(" - ")[1])
+            sessaoController.delete(numero)
+            self.carregar_lista()
+
+    def carregar_lista(self):
+        self.lista.clear()
+        sessoes = sessaoController.get_all()
+        for sessao in sessoes:
+            self.lista.addItem(sessao[0] + " - " + str(sessao[1]))
 
 class Discos(QWidget):
     def __init__(self, stacked_widget:QStackedWidget):
@@ -186,12 +413,12 @@ class Discos(QWidget):
         self.stacked_widget = stacked_widget
         
         self.voltar = QPushButton("Voltar")
-        self.adicionar = QPushButton("Adicionar Disco")
-        self.listar = QPushButton("Listar Disco")
-        self.editar = QPushButton("Editar Disco")
-        self.remover = QPushButton("Remover Disco")
+        self.adicionar = QPushButton("Adicionar Discos")
+        self.listar = QPushButton("Listar Discos")
 
-        self.voltar.clicked.connect(self.handle_voltar)
+        self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
+        self.adicionar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex())
+        self.listar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex())
         self.initUI()
 
     def initUI(self):
@@ -200,13 +427,30 @@ class Discos(QWidget):
         layout.addWidget(self.voltar, 0, 0)
         layout.addWidget(self.adicionar, 1, 0)
         layout.addWidget(self.listar, 2, 0)
-        layout.addWidget(self.editar, 3, 0)
-        layout.addWidget(self.remover, 4, 0)
         self.setLayout(layout)
 
-    def handle_voltar(self):
-        self.stacked_widget.setCurrentIndex(3)
+class AdicionarDiscos(QWidget):
+    def __init__(self):
+        super().__init__()
 
+    def initUI(self):
+        
+        
+        layout = QGridLayout()
+
+class ListarDiscos(QWidget):
+    def __init__(self):
+        super().__init__()
+
+    def initUI(self):
+        layout = QGridLayout()
+        
+    def __init__(self):
+        super().__init__()
+
+    def initUI(self):
+        layout = QGridLayout
+       
 class Emprestimos(QWidget):
     def __init__(self, stacked_widget:QStackedWidget):
         super().__init__()
@@ -227,7 +471,67 @@ class Emprestimos(QWidget):
     def handle_voltar(self):
         self.stacked_widget.setCurrentIndex(3)
 
+class EditarFuncionario(QWidget):
+    def __init__(self, stacked_widget: QStackedWidget):
+        super().__init__()
+        self.stacked_widget = stacked_widget
 
+        self.voltar = QPushButton("Voltar")
+        self.titleCpf = QLabel("CPF:")
+        self.cpf = QLineEdit()
+        self.titleNome = QLabel("Nome:")
+        self.nome = QLineEdit()
+        self.titleLogin = QLabel("Login:")
+        self.login = QLineEdit()
+        self.titleIdade = QLabel("Idade:")
+        self.idade = QLineEdit()
+        self.titleSenha = QLabel("Senha:")
+        self.senha = QLineEdit()
+        self.titleCargo = QLabel("Cargo:")
+        self.cargo = QLineEdit()
+        self.editar = QPushButton("Editar")
+        
+        self.editar.clicked.connect(self.handle_editar)
+        self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
+
+        self.initUI() 
+
+    def validate_inputs(self):
+        if not self.cpf.text() or not self.nome.text() or not self.login.text() or not self.idade.text() or not self.senha.text() or not self.cargo.text():
+            return False
+        return True
+
+    def handle_editar(self):
+        if not self.validate_inputs():
+            return
+
+        funcionario = Usuario(
+            cpf=self.cpf.text(),
+            nome=self.nome.text(),
+            login=self.login.text(),
+            idade=self.idade.text(),
+            senha=self.senha.text(),
+            cargo=self.cargo.text()
+        )
+        
+        usuariosController.update(funcionario)
+
+        self.stacked_widget.setCurrentIndex(3)
+        
+    def initUI(self):
+        layout = QGridLayout()
+
+        layout.addWidget(self.voltar, 0, 0)
+        layout.addWidget(self.titleCpf, 1, 0)
+        layout.addWidget(self.cpf, 1, 1)
+        layout.addWidget(self.titleNome, 2, 0)
+        layout.addWidget(self.nome, 2, 1)
+        layout.addWidget(self.titleLogin, 3, 0)
+        layout.addWidget(self.login, 3, 1)
+        layout.addWidget(self.titleIdade, 4, 0)
+        layout.addWidget(self.idade, 4, 1)
+        layout.addWidget(self.titleSenha, 5, 0)
+        layout.addWidget(self.senha, 5, 1)
 
 class Menu(QWidget):
     def __init__(self, stacked_widget: QStackedWidget):
@@ -253,7 +557,6 @@ class Menu(QWidget):
 
         self.title1.setAlignment(Qt.AlignCenter)
 
-
         layout.addWidget(self.title1, 0, 0)
         layout.addWidget(self.loginButton, 1, 0)
         layout.addWidget(self.registerButton, 2, 0)
@@ -266,27 +569,31 @@ class MenuLogin(QWidget):
         self.stacked_widget = stacked_widget
         
         self.logout = QPushButton("Logout")
-        self.funcionarios = QPushButton("Funcionarios")
-        self.discos = QPushButton("Discos")        
+                
         self.emprestimo = QPushButton("Emprestimo")
 
+        self.sessao = QPushButton("Gerenciar Sessões")
+
+        self.discos = QPushButton("Discos")
+
+        self.funcionarios = QPushButton("Funcionários")
+
         self.logout.clicked.connect(self.handle_logout)
-        self.funcionarios.clicked.connect(self.handle_funcionarios)
         self.discos.clicked.connect(self.handle_discos)
         self.emprestimo.clicked.connect(self.handle_emprestimos)
-        
+        self.sessao.clicked.connect(self.handle_sessao)
+        self.funcionarios.clicked.connect(self.handle_funcionarios)
         self.initUI()
 
     def initUI(self):
         layout = QGridLayout()
             
         layout.addWidget(self.logout, 0, 0)
-        layout.addWidget(self.funcionarios, 1, 0)
-        layout.addWidget(self.discos, 2, 0)
-        layout.addWidget(self.emprestimo, 3, 0)
+        layout.addWidget(self.discos, 1, 0)
+        layout.addWidget(self.emprestimo, 2, 0)
+        layout.addWidget(self.sessao, 3, 0)
+        layout.addWidget(self.funcionarios, 4, 0)
         
-        layout.addWidget(self.funcionarios)
-
         self.setLayout(layout)
 
     def handle_logout(self):
@@ -294,16 +601,25 @@ class MenuLogin(QWidget):
         usuario_atual = Usuario("", "", -1, "", "", "")
         self.stacked_widget.setCurrentIndex(0)
 
+    def handle_discos(self):
+        global usuario_atual
+        if usuario_atual.get_cargo() == "Funcionario" or usuario_atual.get_cargo() == "Admin":
+            self.stacked_widget.setCurrentIndex(4)
+            
+    def handle_emprestimos(self):
+        global usuario_atual
+        if usuario_atual.get_cargo() != "Funcionario":
+            self.stacked_widget.setCurrentIndex(5)
+
+    def handle_sessao(self):
+        global usuario_atual
+        if usuario_atual.get_cargo() == "Funcionario" or usuario_atual.get_cargo() == "Admin":
+            self.stacked_widget.setCurrentIndex(8)
+
     def handle_funcionarios(self):
         global usuario_atual
-        if usuario_atual.get_cargo() == "Funcionario":
+        if usuario_atual.get_cargo() == "Admin":
             self.stacked_widget.setCurrentIndex(4)
-
-    def handle_discos(self):
-        self.stacked_widget.setCurrentIndex(5)
-
-    def handle_emprestimos(self):
-        self.stacked_widget.setCurrentIndex(6)
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -319,15 +635,34 @@ class MainWindow(QWidget):
         self.loginWindow = Login(self.stacked_widget)
         self.registerWindow = Register(self.stacked_widget)
         self.menuLogin = MenuLogin(self.stacked_widget)
-        self.funcionarios = Funcionarios(self.stacked_widget)
+
         self.discos = Discos(self.stacked_widget)
+
         self.emprestimos = Emprestimos(self.stacked_widget)
+
+        self.funcionarios = Funcionarios(self.stacked_widget)
+        self.adicionarFuncionario = AdicionarFuncionario(self.stacked_widget)
+        self.listarFuncionario = ListarFuncionario(self.stacked_widget)
+        self.editarFuncionario = EditarFuncionario(self.stacked_widget)
+        
+        self.sessoes = Sessoes(self.stacked_widget)
+        self.adicionarSessao = AdicionarSessao(self.stacked_widget)
+        self.listarSessoes = ListarSessoes(self.stacked_widget)
         
         self.stacked_widget.addWidget(self.menuWindow)
         self.stacked_widget.addWidget(self.loginWindow)
         self.stacked_widget.addWidget(self.registerWindow)
         self.stacked_widget.addWidget(self.menuLogin)
+
         self.stacked_widget.addWidget(self.funcionarios)
+        self.stacked_widget.addWidget(self.adicionarFuncionario)
+        self.stacked_widget.addWidget(self.listarFuncionario)
+        self.stacked_widget.addWidget(self.editarFuncionario)
+
+        self.stacked_widget.addWidget(self.sessoes)
+        self.stacked_widget.addWidget(self.adicionarSessao)
+        self.stacked_widget.addWidget(self.listarSessoes)
+
         self.stacked_widget.addWidget(self.discos)
         self.stacked_widget.addWidget(self.emprestimos)
 
