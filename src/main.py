@@ -654,6 +654,8 @@ class Generos(QWidget):
         
         self.listar = QPushButton("Listar Gêneros")
 
+        self.listar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(18))
+        
         self.initUI()
 
     def initUI(self):
@@ -706,6 +708,50 @@ class AdicionarGeneros(QWidget):
         self.stacked_widget.setCurrentIndex(3)
 
 class ListarGeneros(QWidget):
+    def __init__(self, stacked_widget: QStackedWidget):
+        super().__init__()
+        self.stacked_widget = stacked_widget
+
+        self.voltar = QPushButton("Voltar")
+        self.recarregar = QPushButton("Recarregar")
+
+        self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
+        self.recarregar.clicked.connect(self.carregar_lista)
+        
+        self.title = QLabel("Listar Gêneros")
+        self.lista = QListWidget()
+        self.remover = QPushButton("Remover")
+        
+        self.remover.clicked.connect(self.handle_click)
+
+        self.initUI()
+
+    def initUI(self):
+        layout = QGridLayout()
+
+        self.carregar_lista()
+
+        layout.addWidget(self.recarregar, 0, 1)        
+        layout.addWidget(self.voltar, 0, 0)
+        layout.addWidget(self.title, 1, 0)
+        layout.addWidget(self.lista, 2, 0)
+        layout.addWidget(self.remover, 3, 0)
+
+        self.setLayout(layout)
+
+    def handle_click(self):
+        item = self.lista.currentItem()
+        if item:
+            codigo_genero = int(item.text().split(" - ")[1])
+            generosController.delete(codigo_genero)
+            self.carregar_lista()
+
+    def carregar_lista(self):
+        self.lista.clear()
+        generos = generosController.get_all()
+        for genero in generos:
+            self.lista.addItem(genero[1] + " - " + str(genero[0]))
+
 
 class Emprestimos(QWidget):
     def __init__(self, stacked_widget:QStackedWidget):
@@ -919,6 +965,7 @@ class MainWindow(QWidget):
 
         self.generos = Generos(self.stacked_widget)
         self.adicionarGeneros = AdicionarGeneros(self.stacked_widget)
+        self.listarGeneros = ListarGeneros(self.stacked_widget)
     
         self.emprestimos = Emprestimos(self.stacked_widget)
         
@@ -944,6 +991,7 @@ class MainWindow(QWidget):
 
         self.stacked_widget.addWidget(self.generos)
         self.stacked_widget.addWidget(self.adicionarGeneros)
+        self.stacked_widget.addWidget(self.listarGeneros)
 
         self.stacked_widget.addWidget(self.emprestimos)
 
