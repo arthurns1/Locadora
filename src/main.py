@@ -1,14 +1,26 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QStackedWidget, QGridLayout, QPushButton, QLineEdit, QListWidget, QDateEdit
+from PyQt5.QtWidgets import (QApplication, QLabel, QVBoxLayout, QWidget, QStackedWidget, QGridLayout, QPushButton, QLineEdit, QListWidget, QPlainTextEdit)
 from PyQt5.QtCore import Qt
+
 from controllers.UsuariosController import UsuariosController
 from controllers.SessaoController import SessaoController
+from controllers.DiscosController import DiscosController
+from controllers.GenerosController import GenerosController
+from controllers.EmprestimosController import EmprestimosController
 
 from models.Usuario import Usuario
 from models.Sessao import Sessao
+from models.Disco import Disco
+from models.Genero import Genero
+from models.Emprestimo import Emprestimo  
+
 
 sessaoController = SessaoController()
 usuariosController = UsuariosController()
+discosController = DiscosController()
+generosController = GenerosController()
+emprestimosController = EmprestimosController()
+
 usuario_atual = Usuario("", "", -1, "", "", "")
 
 
@@ -306,6 +318,51 @@ class ListarFuncionario(QWidget):
             if usuario_editar:
                 self.stacked_widget.setCurrentIndex(7)
 
+class EditarFuncionario(QWidget):
+    def __init__(self, stacked_widget: QStackedWidget):
+        super().__init__()
+        self.stacked_widget = stacked_widget
+
+        self.voltar = QPushButton("Voltar")
+        self.titleCpf = QLabel("CPF:")
+        self.cpf = QLineEdit()
+        self.titleNome = QLabel("Nome:")
+        self.nome = QLineEdit()
+        self.titleLogin = QLabel("Login:")
+        self.login = QLineEdit()
+        self.titleIdade = QLabel("Idade:")
+        self.idade = QLineEdit()
+        self.titleSenha = QLabel("Senha:")
+        self.senha = QLineEdit()
+        self.titleCargo = QLabel("Cargo:")
+        self.cargo = QListWidget()
+        self.editar = QPushButton("Editar")
+        
+        self.editar.clicked.connect(self.handle_editar)
+        self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
+
+        self.initUI()
+
+        def initUI(self):
+            layout = QGridLayout()
+
+        def handle_editar(self):
+            if not self.validate_inputs():
+                return
+
+            funcionario = Usuario(
+                cpf=self.cpf.text(),
+                nome=self.nome.text(),
+                login=self.login.text(),
+                idade=self.idade.text(),
+                senha=self.senha.text(),
+                cargo=self.cargo.currentItem().text()
+            )
+            
+            usuariosController.update(funcionario)
+
+            self.stacked_widget.setCurrentIndex(3)
+
 class Sessoes(QWidget):
     def __init__(self, stacked_widget: QStackedWidget):
         super().__init__()
@@ -327,7 +384,7 @@ class Sessoes(QWidget):
         layout.addWidget(self.voltar, 0, 0)
         layout.addWidget(self.adicionar, 1, 0)
         layout.addWidget(self.listar, 2, 0)
-        self.setLayout(layout)
+        self.setLayout(layout)  
 
 class AdicionarSessao(QWidget):
     def __init__(self, stacked_widget: QStackedWidget):
@@ -352,7 +409,7 @@ class AdicionarSessao(QWidget):
             self.stacked_widget.setCurrentIndex(3)
 
     def initUI(self):
-        layout = QGridLayout()
+        layout = QGridLayout()  
 
         layout.addWidget(self.voltar, 0, 0)
         layout.addWidget(self.titleCorredor, 1, 0)
@@ -407,6 +464,38 @@ class ListarSessoes(QWidget):
         for sessao in sessoes:
             self.lista.addItem(sessao[0] + " - " + str(sessao[1]))
 
+class EditarSessao(QWidget):
+    def __init__(self, stacked_widget: QStackedWidget):
+        super().__init__()
+        self.stacked_widget = stacked_widget
+
+        self.voltar = QPushButton("Voltar")
+        self.titleCorredor = QLabel("Corredor:")
+        self.corredor = QLineEdit()
+        self.editar = QPushButton("Editar")
+        
+        self.editar.clicked.connect(self.handle_editar)
+        self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
+
+        self.initUI()
+
+    def handle_editar(self):
+        sessao = Sessao(0, self.corredor.text())
+        
+        if sessao:
+            sessaoController.update(sessao)
+            self.stacked_widget.setCurrentIndex(3)
+
+    def initUI(self):
+        layout = QGridLayout()  
+
+        layout.addWidget(self.voltar, 0, 0)
+        layout.addWidget(self.titleCorredor, 1, 0)
+        layout.addWidget(self.corredor, 1, 1)
+        layout.addWidget(self.editar, 2, 0)
+
+        self.setLayout(layout)
+
 class Discos(QWidget):
     def __init__(self, stacked_widget:QStackedWidget):
         super().__init__()
@@ -417,8 +506,8 @@ class Discos(QWidget):
         self.listar = QPushButton("Listar Discos")
 
         self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
-        self.adicionar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex())
-        self.listar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex())
+        self.adicionar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(13))
+        self.listar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(14))
         self.initUI()
 
     def initUI(self):
@@ -430,27 +519,194 @@ class Discos(QWidget):
         self.setLayout(layout)
 
 class AdicionarDiscos(QWidget):
-    def __init__(self):
+    def __init__(self, stacked_widget: QStackedWidget):
         super().__init__()
+        self.stacked_widget = stacked_widget
+        self.voltar = QPushButton("Voltar")
+        self.recarregar = QPushButton("Recarregar")
+
+        self.recarregar.clicked.connect(self.handle_recarregar)
+        self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
+        
+        self.titleTitulo = QLabel("Título:")
+        self.titulo = QLineEdit()
+        self.titleDiretor = QLabel("Diretor:")
+        self.diretor = QLineEdit()
+        self.titleLancamento = QLabel("Lançamento:")
+        self.lancamento = QLineEdit()
+        self.titleClassInd = QLabel("Classificação Indicativa:")
+        self.class_ind = QLineEdit()
+        self.titleSessao = QLabel("Sessão:")
+        self.sessao = QListWidget()
+        self.titleGenero = QLabel("Gênero:")
+        self.genero = QListWidget()
+        self.adicionar = QPushButton("Adicionar")
+
+        self.carregar_generos()
+        self.carregar_sessoes()
+        
+        self.initUI()
 
     def initUI(self):
-        
-        
         layout = QGridLayout()
 
+        layout.addWidget(self.voltar, 0, 0)
+        layout.addWidget(self.recarregar, 0, 1)
+        layout.addWidget(self.titleTitulo, 1, 0)
+        layout.addWidget(self.titulo, 1, 1)
+        layout.addWidget(self.titleDiretor, 2, 0)
+        layout.addWidget(self.diretor, 2, 1)
+        layout.addWidget(self.titleLancamento, 3, 0)
+        layout.addWidget(self.lancamento, 3, 1)
+        layout.addWidget(self.titleClassInd, 4, 0)
+        layout.addWidget(self.class_ind, 4, 1)
+        layout.addWidget(self.titleSessao, 5, 0)
+        layout.addWidget(self.sessao, 5, 1)
+        layout.addWidget(self.titleGenero, 6, 0)
+        layout.addWidget(self.genero, 6, 1)
+        layout.addWidget(self.adicionar, 7, 0)  
+        
+        self.setLayout(layout)
+
+    def handle_adicionar(self):
+        disco = Disco(
+            titulo=self.titulo.text(),
+            diretor=self.diretor.text(),
+            lancamento=self.lancamento.text(),
+            class_ind=self.class_ind.text()
+        )
+        discosController.create(disco)
+
+    def handle_recarregar(self):
+        self.sessao.clear()
+        self.genero.clear()
+        self.carregar_sessoes()
+        self.carregar_generos()
+        
+    def carregar_sessoes(self):
+        sessoes = sessaoController.get_all()
+        for sessao in sessoes:
+            self.sessao.addItem(sessao[0] + " - " + str(sessao[1]))
+
+    def carregar_generos(self):
+        generos = discosController.get_all()
+        for genero in generos:
+            self.genero.addItem(genero[0])
+    
 class ListarDiscos(QWidget):
-    def __init__(self):
+    def __init__(self, stacked_widget: QStackedWidget):
         super().__init__()
+        self.stacked_widget = stacked_widget
 
     def initUI(self):
         layout = QGridLayout()
         
-    def __init__(self):
+        self.setLayout(layout)
+
+class EditarDiscos(QWidget):
+    def __init__(self, stacked_widget: QStackedWidget):
         super().__init__()
+        self.stacked_widget = stacked_widget
+
+        self.voltar = QPushButton("Voltar")
+        self.titleNome = QLabel("Nome:")
+        self.nome = QLineEdit()
+        self.titleGenero = QLabel("Gênero:")
+        self.genero = QLineEdit()
+        self.titleAno = QLabel("Ano:")
+        self.ano = QLineEdit()
+        self.editar = QPushButton("Editar")
+        
+        self.editar.clicked.connect(self.handle_editar)
+        self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
+
+        self.initUI() 
 
     def initUI(self):
-        layout = QGridLayout
-       
+        layout = QGridLayout()
+
+        layout.addWidget(self.voltar, 0, 0)
+        layout.addWidget(self.titleNome, 1, 0)
+        layout.addWidget(self.nome, 1, 1)
+        layout.addWidget(self.titleGenero, 2, 0)
+        layout.addWidget(self.genero, 2, 1)
+        layout.addWidget(self.titleAno, 3, 0)
+        layout.addWidget(self.ano, 3, 1)
+        layout.addWidget(self.editar, 4, 0)
+
+        self.setLayout(layout)
+    
+    def handle_editar(self):
+        # Implementar lógica de edição de disco
+        pass
+
+class Generos(QWidget):
+    def __init__(self, stacked_widget: QStackedWidget):
+        super().__init__()
+        self.stacked_widget = stacked_widget
+        self.voltar = QPushButton("Voltar")
+
+        self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
+        
+        self.adicionar = QPushButton("Adicionar Gênero")
+
+        self.adicionar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(17))
+        
+        self.listar = QPushButton("Listar Gêneros")
+
+        self.initUI()
+
+    def initUI(self):
+        layout = QGridLayout()
+
+        layout.addWidget(self.voltar, 0, 0)
+        layout.addWidget(self.adicionar, 1, 0)
+        layout.addWidget(self.listar, 2, 0)
+        
+        self.setLayout(layout)
+
+class AdicionarGeneros(QWidget):
+    def __init__(self, stacked_widget: QStackedWidget):
+        super().__init__()
+        self.stacked_widget = stacked_widget
+
+        self.voltar = QPushButton("Voltar")
+
+        self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
+
+        self.titleGenero = QLabel("Nome:")
+        self.genero = QLineEdit()
+        self.titleDescricao = QLabel("Descrição:")
+        self.descricao = QPlainTextEdit()
+
+        self.adicionar = QPushButton("Adicionar")
+
+        self.adicionar.clicked.connect(self.handle_adicionar)
+
+        self.initUI()
+
+    def initUI(self):
+        layout = QGridLayout()
+
+        layout.addWidget(self.voltar, 0, 0)
+        layout.addWidget(self.titleGenero, 1, 0)
+        layout.addWidget(self.genero, 1, 1)
+        layout.addWidget(self.titleDescricao, 2, 0)
+        layout.addWidget(self.descricao, 2, 1)
+        layout.addWidget(self.adicionar, 3, 0)
+
+        self.setLayout(layout)
+
+    def handle_adicionar(self):
+        genero = Genero(0, self.genero.text(), self.descricao.toPlainText())
+
+        if genero:
+            generosController.create(genero)
+        
+        self.stacked_widget.setCurrentIndex(3)
+
+class ListarGeneros(QWidget):
+
 class Emprestimos(QWidget):
     def __init__(self, stacked_widget:QStackedWidget):
         super().__init__()
@@ -572,17 +828,21 @@ class MenuLogin(QWidget):
                 
         self.emprestimo = QPushButton("Emprestimo")
 
+        self.generos = QPushButton("Gerenciar Gêneros")
+
         self.sessao = QPushButton("Gerenciar Sessões")
 
-        self.discos = QPushButton("Discos")
+        self.discos = QPushButton("Gerenciar Discos")
 
-        self.funcionarios = QPushButton("Funcionários")
+        self.funcionarios = QPushButton("Gerenciar Funcionários")
 
         self.logout.clicked.connect(self.handle_logout)
         self.discos.clicked.connect(self.handle_discos)
         self.emprestimo.clicked.connect(self.handle_emprestimos)
         self.sessao.clicked.connect(self.handle_sessao)
         self.funcionarios.clicked.connect(self.handle_funcionarios)
+        self.generos.clicked.connect(self.handle_generos)
+
         self.initUI()
 
     def initUI(self):
@@ -593,7 +853,8 @@ class MenuLogin(QWidget):
         layout.addWidget(self.emprestimo, 2, 0)
         layout.addWidget(self.sessao, 3, 0)
         layout.addWidget(self.funcionarios, 4, 0)
-        
+        layout.addWidget(self.generos, 5, 0)
+                
         self.setLayout(layout)
 
     def handle_logout(self):
@@ -604,12 +865,12 @@ class MenuLogin(QWidget):
     def handle_discos(self):
         global usuario_atual
         if usuario_atual.get_cargo() == "Funcionario" or usuario_atual.get_cargo() == "Admin":
-            self.stacked_widget.setCurrentIndex(4)
+            self.stacked_widget.setCurrentIndex(12)
             
     def handle_emprestimos(self):
         global usuario_atual
         if usuario_atual.get_cargo() != "Funcionario":
-            self.stacked_widget.setCurrentIndex(5)
+            self.stacked_widget.setCurrentIndex(16)
 
     def handle_sessao(self):
         global usuario_atual
@@ -618,8 +879,13 @@ class MenuLogin(QWidget):
 
     def handle_funcionarios(self):
         global usuario_atual
-        if usuario_atual.get_cargo() == "Admin":
+        if usuario_atual.get_cargo() == "Admin":    
             self.stacked_widget.setCurrentIndex(4)
+
+    def handle_generos(self):
+        global usuario_atual
+        if usuario_atual.get_cargo() == "Funcionario" or usuario_atual.get_cargo() == "Admin":
+            self.stacked_widget.setCurrentIndex(16)
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -636,10 +902,6 @@ class MainWindow(QWidget):
         self.registerWindow = Register(self.stacked_widget)
         self.menuLogin = MenuLogin(self.stacked_widget)
 
-        self.discos = Discos(self.stacked_widget)
-
-        self.emprestimos = Emprestimos(self.stacked_widget)
-
         self.funcionarios = Funcionarios(self.stacked_widget)
         self.adicionarFuncionario = AdicionarFuncionario(self.stacked_widget)
         self.listarFuncionario = ListarFuncionario(self.stacked_widget)
@@ -648,6 +910,17 @@ class MainWindow(QWidget):
         self.sessoes = Sessoes(self.stacked_widget)
         self.adicionarSessao = AdicionarSessao(self.stacked_widget)
         self.listarSessoes = ListarSessoes(self.stacked_widget)
+        self.editarSessoes = EditarSessao(self.stacked_widget)
+
+        self.discos = Discos(self.stacked_widget)
+        self.adicionarDiscos = AdicionarDiscos(self.stacked_widget)
+        self.listarDiscos = ListarDiscos(self.stacked_widget)
+        self.editarDiscos = EditarDiscos(self.stacked_widget)
+
+        self.generos = Generos(self.stacked_widget)
+        self.adicionarGeneros = AdicionarGeneros(self.stacked_widget)
+    
+        self.emprestimos = Emprestimos(self.stacked_widget)
         
         self.stacked_widget.addWidget(self.menuWindow)
         self.stacked_widget.addWidget(self.loginWindow)
@@ -662,8 +935,16 @@ class MainWindow(QWidget):
         self.stacked_widget.addWidget(self.sessoes)
         self.stacked_widget.addWidget(self.adicionarSessao)
         self.stacked_widget.addWidget(self.listarSessoes)
-
+        self.stacked_widget.addWidget(self.editarSessoes)
+        
         self.stacked_widget.addWidget(self.discos)
+        self.stacked_widget.addWidget(self.adicionarDiscos)
+        self.stacked_widget.addWidget(self.listarDiscos)
+        self.stacked_widget.addWidget(self.editarDiscos)
+
+        self.stacked_widget.addWidget(self.generos)
+        self.stacked_widget.addWidget(self.adicionarGeneros)
+
         self.stacked_widget.addWidget(self.emprestimos)
 
         

@@ -1,7 +1,7 @@
 import datetime
 
 class Disco:
-    def __init__(self, codigo:int, numSessao:int, codigoGenero: int, titulo:str, lancamento:datetime, diretor:str, classInd: int):
+    def __init__(self, codigo:int, numSessao:int, codigoGenero: int, titulo:str, lancamento:int, diretor:str, classInd: int):
         self.__codigo = codigo
         self.__numSessao = numSessao
         self.__codigoGenero = codigoGenero

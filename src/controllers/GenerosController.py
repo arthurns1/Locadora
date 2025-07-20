@@ -10,10 +10,10 @@ class GenerosController:
         self.db = Database()
 
     def create(self, genero: Genero):
-        params = (genero.get_descricao(),)
+        params = (genero.get_nome(), genero.get_descricao())
 
         try:
-            sql = "INSERT INTO generos (codigo_genero, descricao) VALUES (DEFAULT, %s)"
+            sql = "INSERT INTO generos (codigo_genero, nome , descricao) VALUES (DEFAULT, %s, %s)"
             self.db.execute_query(sql, params, False, True)
 
             return True
@@ -44,10 +44,10 @@ class GenerosController:
             return []
 
     def update(self, genero: Genero):
-        params = (genero.get_descricao(), genero.get_codigo())
+        params = (genero.get_nome(), genero.get_descricao(), genero.get_codigo())
 
         try:
-            sql = "UPDATE generos SET descricao= %s WHERE codigo_genero = %s;"
+            sql = "UPDATE generos SET nome= %s, descricao= %s WHERE codigo_genero = %s;"
             self.db.execute_query(sql, params, False, True)
 
             return True
