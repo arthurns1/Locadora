@@ -567,6 +567,7 @@ class AdicionarDiscos(QWidget):
         layout.addWidget(self.adicionar, 7, 0)  
 
         self.adicionar.clicked.connect(self.handle_adicionar)
+        
         self.setLayout(layout)
 
     def handle_adicionar(self):
@@ -577,9 +578,14 @@ class AdicionarDiscos(QWidget):
             lancamento=self.lancamento.text(),
             classInd=self.class_ind.text(),
             codigoGenero= self.genero.currentItem().text().split(" - ")[0],
-            numSessao=self.sessao.currentItem().text().split(" - ")[0]
+            numSessao=self.sessao.currentItem().text().split(" - ")[0],
+            emprestado=False
         )
-        discosController.create(disco)
+
+        if disco:
+            discosController.create(disco)
+
+            self.stacked_widget.setCurrentIndex(3)
 
     def handle_recarregar(self):
         self.sessao.clear()
@@ -761,16 +767,17 @@ class EditarGeneros(QWidget):
         super().__init__()
         self.stacked_widget = stacked_widget
 
-
 class Emprestimos(QWidget):
     def __init__(self, stacked_widget:QStackedWidget):
         super().__init__()
         self.stacked_widget = stacked_widget
         
         self.voltar = QPushButton("Voltar")
+        
+        self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
+        
         self.adicionar = QPushButton("Fazer empréstimo")
-        self.listar = QPushButton("Listar empréstimos")
-
+        
     def initUI(self):
         layout = QGridLayout()
 
@@ -779,8 +786,44 @@ class Emprestimos(QWidget):
         layout.addWidget(self.listar, 2, 0)
         self.setLayout(layout)
 
-    def handle_voltar(self):
-        self.stacked_widget.setCurrentIndex(3)
+class RealizarEmprestimo(QWidget):
+    def __init__(self, stacked_widget: QStackedWidget):
+        super().__init__()
+        self.stacked_widget = stacked_widget
+
+        self.voltar = QPushButton("Voltar")
+        self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
+
+        self.titleDiscos = QLabel("Discos:")
+        self.discos = QListWidget()
+        self.emprestimo = QPushButton("Realizar Empréstimo")
+
+        self.emprestimo.clicked.connect(self.handle_emprestimo)
+        
+        self.initUI()
+    #Terminar depois, lembrando que um usuário poderá fazer apenas 3 emprestimos por vez
+    #caso o usuário já tenha 3 emprestimos, não poderá fazer mais nenhum
+    def handle_emprestimo(self):
+        pass
+
+    def initUI(self):
+        layout = QGridLayout()
+
+        self.carregar_disco()
+        
+        layout.addWidget(self.voltar, 0, 0)
+        layout.addWidget(self.titleDiscos, 1, 0)
+        layout.addWidget(self.discos, 2, 0)
+        layout.addWidget(self.emprestimo, 3, 0)
+        
+        self.setLayout(layout)
+        
+    def carregar_disco(self):
+        self.discos.clear()
+        discos = discosController.get_all()
+        for disco in discos:
+            if not disco[7]:
+                self.discos.addItem(disco[3] + " - " + str(disco[0]))
 
 class Menu(QWidget):
     def __init__(self, stacked_widget: QStackedWidget):

@@ -10,10 +10,10 @@ class DiscosController:
         self.db = Database()
 
     def create(self, disco: Disco):
-        params = (disco.get_numSessao(), disco.get_codigoGenero(), disco.get_titulo(), disco.get_lancamento(), disco.get_diretor(), disco.get_classInd())
-        print(params)
+        params = (disco.get_numSessao(), disco.get_codigoGenero(), disco.get_titulo(), disco.get_lancamento(), disco.get_diretor(), disco.get_classInd(), disco.is_emprestado())
+
         try:
-            sql = "INSERT INTO discos (codigo_disco, num_sessao, cod_genero, titulo, lancamento, diretor, class_ind) VALUES (DEFAULT, %s, %s, %s, %s, %s, %s);"
+            sql = "INSERT INTO discos (codigo_disco, num_sessao, cod_genero, titulo, lancamento, diretor, class_ind, emprestado) VALUES (DEFAULT, %s, %s, %s, %s, %s, %s, %s);"
             self.db.execute_query(sql, params, False, True)
 
             return True
@@ -42,6 +42,18 @@ class DiscosController:
             print(f"Houve um erro ao retornar discos: {e}")
             
             return []
+
+    def set_emprestado(self, codigo_disco: int, emprestado: bool):
+        params = (emprestado, codigo_disco)
+
+        try:
+            sql = "UPDATE discos SET emprestado = %s WHERE codigo_disco = %s;"
+            self.db.execute_query(sql, params, False, True)
+
+            return True
+        except Error as e:
+            print(f"Ocorreu um erro ao atualizar status de empréstimo do disco: {e}")
+            return False
 
     def update(self, disco: Disco):
         params = (disco.get_numSessao(), disco.get_codigoGenero(), disco.get_titulo(), disco.get_lancamento(), disco.get_diretor(), disco.get_classInd(), disco.get_codigo())
