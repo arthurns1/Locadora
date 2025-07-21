@@ -22,6 +22,7 @@ generosController = GenerosController()
 emprestimosController = EmprestimosController()
 
 usuario_atual = Usuario("", "", -1, "", "", "")
+body = {}
 
 
 class Login(QWidget):    
@@ -276,8 +277,9 @@ class ListarFuncionario(QWidget):
         self.remover = QPushButton("Remover")
         self.editar = QPushButton("Editar")
         
-        self.remover.clicked.connect(self.handle_click)
-
+        self.remover.clicked.connect(self.handle_remover)
+        self.editar.clicked.connect(self.handle_editar)
+        
         self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
         
         self.initUI()
@@ -295,13 +297,19 @@ class ListarFuncionario(QWidget):
         layout.addWidget(self.editar, 3, 1)
 
         self.setLayout(layout)
-        
-    def handle_click(self):
+
+    def handle_remover(self):
         item = self.lista.currentItem()
         if item:
             cpf = item.text().split(" - ")[1]
             usuariosController.delete(cpf)
             self.carregar_lista()
+
+    def handle_editar(self):
+        item = self.lista.currentItem()
+        if item:
+            body["funcionario"] = item.text().split(" - ")[1]
+            self.stacked_widget.setCurrentIndex(7)
 
     def carregar_lista(self):
         self.lista.clear()
@@ -309,14 +317,6 @@ class ListarFuncionario(QWidget):
         for funcionario in funcionarios:
             if funcionario[5] == "Funcionario":
                 self.lista.addItem(funcionario[4] + " - " + funcionario[0])
-
-    def handle_editar(self):
-        item = self.lista.currentItem()
-        if item:
-            cpf = item.text().split(" - ")[1]
-            usuario_editar = usuariosController.get_by_cpf(cpf)
-            if usuario_editar:
-                self.stacked_widget.setCurrentIndex(7)
 
 class EditarFuncionario(QWidget):
     def __init__(self, stacked_widget: QStackedWidget):
@@ -337,6 +337,9 @@ class EditarFuncionario(QWidget):
         self.titleCargo = QLabel("Cargo:")
         self.cargo = QListWidget()
         self.editar = QPushButton("Editar")
+
+        self.cargo.addItem("Funcionario")
+        self.cargo.addItem("Admin")
         
         self.editar.clicked.connect(self.handle_editar)
         self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
@@ -346,22 +349,37 @@ class EditarFuncionario(QWidget):
     def initUI(self):
         layout = QGridLayout()
 
-    def handle_editar(self):
-        if not self.validate_inputs():
-            return
-
-        funcionario = Usuario(
-            cpf=self.cpf.text(),
-            nome=self.nome.text(),
-            login=self.login.text(),
-            idade=self.idade.text(),
-            senha=self.senha.text(),
-            cargo=self.cargo.currentItem().text()
-        )
+        layout.addWidget(self.voltar, 0, 0)
+        layout.addWidget(self.titleCpf, 1, 0)
+        layout.addWidget(self.cpf, 1, 1)
+        layout.addWidget(self.titleNome, 2, 0)
+        layout.addWidget(self.nome, 2, 1)
+        layout.addWidget(self.titleLogin, 3, 0)
+        layout.addWidget(self.login, 3, 1)
+        layout.addWidget(self.titleIdade, 4, 0)
+        layout.addWidget(self.idade, 4, 1)
+        layout.addWidget(self.titleSenha, 5, 0)
+        layout.addWidget(self.senha, 5, 1)
+        layout.addWidget(self.titleCargo, 6, 0)
+        layout.addWidget(self.cargo, 6, 1)
+        layout.addWidget(self.editar, 7, 0)
         
-        usuariosController.update(funcionario)
+        self.setLayout(layout)
 
-        self.stacked_widget.setCurrentIndex(3)
+    def handle_editar(self):
+        if body["funcionario"]:    
+            funcionario = Usuario(
+                cpf=body["funcionario"],
+                nome=self.nome.text(),
+                login=self.login.text(),
+                idade=self.idade.text(),
+                senha=self.senha.text(),
+                cargo=self.cargo.currentItem().text()
+            )
+            
+            usuariosController.update(funcionario)
+
+            self.stacked_widget.setCurrentIndex(3)    
 
 class Sessoes(QWidget):
     def __init__(self, stacked_widget: QStackedWidget):
