@@ -449,9 +449,11 @@ class ListarSessoes(QWidget):
         self.title = QLabel("Listar Sessões")
         self.lista = QListWidget()
         self.remover = QPushButton("Remover")
+        self.editar = QPushButton("Editar")
         
-        self.remover.clicked.connect(self.handle_click)
-
+        self.remover.clicked.connect(self.handle_remover)
+        self.editar.clicked.connect(self.handle_editar)
+        
         self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
         
         self.initUI()
@@ -466,15 +468,22 @@ class ListarSessoes(QWidget):
         layout.addWidget(self.title, 1, 0)
         layout.addWidget(self.lista, 2, 0)
         layout.addWidget(self.remover, 3, 0)
-
+        layout.addWidget(self.editar, 3, 1)
         self.setLayout(layout)
 
-    def handle_click(self):
+    def handle_remover(self):
         item = self.lista.currentItem()
         if item:
             numero = int(item.text().split(" - ")[1])
             sessaoController.delete(numero)
             self.carregar_lista()
+
+    def handle_editar(self):
+        item = self.lista.currentItem()
+        if item:
+            numero = int(item.text().split(" - ")[1])
+            body["sessao"] = numero
+            self.stacked_widget.setCurrentIndex(11)
 
     def carregar_lista(self):
         self.lista.clear()
@@ -498,9 +507,8 @@ class EditarSessao(QWidget):
         self.initUI()
 
     def handle_editar(self):
-        sessao = Sessao(0, self.corredor.text())
-        
-        if sessao:
+        if body["sessao"]:
+            sessao = Sessao(body["sessao"], self.corredor.text())
             sessaoController.update(sessao)
             self.stacked_widget.setCurrentIndex(3)
 
@@ -625,48 +633,142 @@ class ListarDiscos(QWidget):
     def __init__(self, stacked_widget: QStackedWidget):
         super().__init__()
         self.stacked_widget = stacked_widget
+        
+        self.voltar = QPushButton("Voltar")
+        self.recarregar = QPushButton("Recarregar")
+
+        self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
+        self.recarregar.clicked.connect(self.carregar_discos)
+        
+        self.titleLista = QLabel("Discos:")
+        self.lista = QListWidget()        
+        self.remover = QPushButton("Remover")
+        self.editar = QPushButton("Editar")
+
+        self.remover.clicked.connect(self.handle_remover)
+
+        self.initUI()
 
     def initUI(self):
         layout = QGridLayout()
+
+        self.carregar_discos()
+        
+        layout.addWidget(self.voltar, 0, 0)
+        layout.addWidget(self.recarregar, 0, 1)
+        layout.addWidget(self.titleLista, 1, 0)
+        layout.addWidget(self.lista, 2, 0)
+        layout.addWidget(self.remover, 3, 0)
+        layout.addWidget(self.editar, 3, 1)
         
         self.setLayout(layout)
+
+    def handle_remover(self):
+        item = self.lista.currentItem()
+        if item:
+            codigo_disco = item.text().split(" - ")[0]
+            discosController.delete(int(codigo_disco))
+            self.carregar_discos()
+
+    def handle_editar(self):
+        item = self.lista.currentItem()
+        if item:
+            numero = item.text().split(" - ")[0]
+            body["disco"] = numero
+            self.stacked_widget.setCurrentIndex(15)
+
+    def carregar_discos(self):
+        self.lista.clear()
+        discos = discosController.get_all()
+
+        for disco in discos:
+            if not disco[7]:
+                self.lista.addItem(str(disco[0]) + " - " + disco[3])
 
 class EditarDiscos(QWidget):
     def __init__(self, stacked_widget: QStackedWidget):
         super().__init__()
         self.stacked_widget = stacked_widget
-
         self.voltar = QPushButton("Voltar")
-        self.titleNome = QLabel("Nome:")
-        self.nome = QLineEdit()
-        self.titleGenero = QLabel("Gênero:")
-        self.genero = QLineEdit()
-        self.titleAno = QLabel("Ano:")
-        self.ano = QLineEdit()
-        self.editar = QPushButton("Editar")
-        
-        self.editar.clicked.connect(self.handle_editar)
-        self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
+        self.recarregar = QPushButton("Recarregar")
 
-        self.initUI() 
+        self.recarregar.clicked.connect(self.handle_recarregar)
+        self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
+        
+        self.titleTitulo = QLabel("Título:")
+        self.titulo = QLineEdit()
+        self.titleDiretor = QLabel("Diretor:")
+        self.diretor = QLineEdit()
+        self.titleLancamento = QLabel("Lançamento:")
+        self.lancamento = QLineEdit()
+        self.titleClassInd = QLabel("Classificação Indicativa:")
+        self.class_ind = QLineEdit()
+        self.titleSessao = QLabel("Sessão:")
+        self.sessao = QListWidget()
+        self.titleGenero = QLabel("Gênero:")
+        self.genero = QListWidget()
+        self.editar = QPushButton("Editar")
+
+        self.carregar_generos()
+        self.carregar_sessoes()
+        
+        self.initUI()
 
     def initUI(self):
         layout = QGridLayout()
 
         layout.addWidget(self.voltar, 0, 0)
-        layout.addWidget(self.titleNome, 1, 0)
-        layout.addWidget(self.nome, 1, 1)
-        layout.addWidget(self.titleGenero, 2, 0)
-        layout.addWidget(self.genero, 2, 1)
-        layout.addWidget(self.titleAno, 3, 0)
-        layout.addWidget(self.ano, 3, 1)
-        layout.addWidget(self.editar, 4, 0)
+        layout.addWidget(self.recarregar, 0, 1)
+        layout.addWidget(self.titleTitulo, 1, 0)
+        layout.addWidget(self.titulo, 1, 1)
+        layout.addWidget(self.titleDiretor, 2, 0)
+        layout.addWidget(self.diretor, 2, 1)
+        layout.addWidget(self.titleLancamento, 3, 0)
+        layout.addWidget(self.lancamento, 3, 1)
+        layout.addWidget(self.titleClassInd, 4, 0)
+        layout.addWidget(self.class_ind, 4, 1)
+        layout.addWidget(self.titleSessao, 5, 0)
+        layout.addWidget(self.sessao, 5, 1)
+        layout.addWidget(self.titleGenero, 6, 0)
+        layout.addWidget(self.genero, 6, 1)
+        layout.addWidget(self.editar, 7, 0)  
 
+        self.editar.clicked.connect(self.handle_editar)
+        
         self.setLayout(layout)
-    
+
     def handle_editar(self):
-        # Implementar lógica de edição de disco
-        pass
+        if body["disco"]:
+                
+            disco = Disco(
+                codigo=body["disco"],
+                titulo=self.titulo.text(),
+                diretor=self.diretor.text(),
+                lancamento=self.lancamento.text(),
+                classInd=self.class_ind.text(),
+                codigoGenero= self.genero.currentItem().text().split(" - ")[0],
+                numSessao=self.sessao.currentItem().text().split(" - ")[0],
+                emprestado=False
+            )
+            if disco:
+                discosController.update(disco)
+                self.stacked_widget.setCurrentIndex(3)
+
+    def handle_recarregar(self):
+        self.sessao.clear()
+        self.genero.clear()
+        self.carregar_sessoes()
+        self.carregar_generos()
+        
+    def carregar_sessoes(self):
+        sessoes = sessaoController.get_all()
+        for sessao in sessoes:
+            self.sessao.addItem(str(sessao[1]) + " - " + sessao[0])
+
+    def carregar_generos(self):
+        generos = generosController.get_all()
+        for genero in generos:
+            self.genero.addItem(str(genero[0]) + " - " + genero[2])
 
 class Generos(QWidget):
     def __init__(self, stacked_widget: QStackedWidget):
@@ -749,9 +851,11 @@ class ListarGeneros(QWidget):
         self.title = QLabel("Listar Gêneros")
         self.lista = QListWidget()
         self.remover = QPushButton("Remover")
+        self.editar = QPushButton("Editar")
+                
+        self.remover.clicked.connect(self.handle_remover)
+        self.editar.clicked.connect(self.handle_editar)
         
-        self.remover.clicked.connect(self.handle_click)
-
         self.initUI()
 
     def initUI(self):
@@ -764,26 +868,67 @@ class ListarGeneros(QWidget):
         layout.addWidget(self.title, 1, 0)
         layout.addWidget(self.lista, 2, 0)
         layout.addWidget(self.remover, 3, 0)
-
+        layout.addWidget(self.editar, 3, 1)
         self.setLayout(layout)
 
-    def handle_click(self):
+    def handle_remover(self):
         item = self.lista.currentItem()
         if item:
             codigo_genero = int(item.text().split(" - ")[1])
             generosController.delete(codigo_genero)
             self.carregar_lista()
 
+    def handle_editar(self):
+        item = self.lista.currentItem()
+        if item:
+            codigo_genero = int(item.text().split(" - ")[1])
+            body["genero"] = codigo_genero
+            self.stacked_widget.setCurrentIndex(19)
+    
     def carregar_lista(self):
         self.lista.clear()
         generos = generosController.get_all()
         for genero in generos:
-            self.lista.addItem(genero[1] + " - " + str(genero[0]))
+            self.lista.addItem(genero[2] + " - " + str(genero[0]))
 
 class EditarGeneros(QWidget):
     def __init__(self, stacked_widget: QStackedWidget):
         super().__init__()
+        
         self.stacked_widget = stacked_widget
+        
+        self.voltar = QPushButton("Voltar")
+
+        self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
+
+        self.titleNome = QLabel("Nome:")
+        self.nome = QLineEdit()
+        self.titleDescricao = QLabel("Descrição:")
+        self.descricao = QPlainTextEdit()
+
+        self.adicionar = QPushButton("Editar")
+
+        self.adicionar.clicked.connect(self.handle_editar)
+
+        self.initUI()
+
+    def initUI(self):
+        layout = QGridLayout()
+
+        layout.addWidget(self.voltar, 0, 0)
+        layout.addWidget(self.titleNome, 1, 0)
+        layout.addWidget(self.nome, 1, 1)
+        layout.addWidget(self.titleDescricao, 2, 0)
+        layout.addWidget(self.descricao, 2, 1)
+        layout.addWidget(self.adicionar, 3, 0)
+
+        self.setLayout(layout)
+
+    def handle_editar(self):
+        if body["genero"]:
+            genero = Genero(body["genero"], self.nome.text(), self.nome.text())
+            generosController.update(genero)
+            self.stacked_widget.setCurrentIndex(3)
 
 class Emprestimos(QWidget):
     def __init__(self, stacked_widget:QStackedWidget):
@@ -974,7 +1119,8 @@ class MainWindow(QWidget):
         self.generos = Generos(self.stacked_widget)
         self.adicionarGeneros = AdicionarGeneros(self.stacked_widget)
         self.listarGeneros = ListarGeneros(self.stacked_widget)
-    
+        self.editarGeneros = EditarGeneros(self.stacked_widget)
+        
         self.emprestimos = Emprestimos(self.stacked_widget)
         
         self.stacked_widget.addWidget(self.menuWindow)
@@ -1000,9 +1146,15 @@ class MainWindow(QWidget):
         self.stacked_widget.addWidget(self.generos)
         self.stacked_widget.addWidget(self.adicionarGeneros)
         self.stacked_widget.addWidget(self.listarGeneros)
+        self.stacked_widget.addWidget(self.editarGeneros)
 
         self.stacked_widget.addWidget(self.emprestimos)
 
+        self.styleSheet("""
+                        QPushButton{
+                            background-color:red;
+                        }
+                        """)
         
         main_layout = QVBoxLayout()
         main_layout.addWidget(self.stacked_widget)
