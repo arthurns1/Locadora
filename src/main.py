@@ -646,7 +646,8 @@ class ListarDiscos(QWidget):
         self.editar = QPushButton("Editar")
 
         self.remover.clicked.connect(self.handle_remover)
-
+        self.editar.clicked.connect(self.handle_editar)
+        
         self.initUI()
 
     def initUI(self):
@@ -672,6 +673,7 @@ class ListarDiscos(QWidget):
 
     def handle_editar(self):
         item = self.lista.currentItem()
+
         if item:
             numero = item.text().split(" - ")[0]
             body["disco"] = numero
@@ -1150,12 +1152,6 @@ class MainWindow(QWidget):
 
         self.stacked_widget.addWidget(self.emprestimos)
 
-        self.styleSheet("""
-                        QPushButton{
-                            background-color:red;
-                        }
-                        """)
-        
         main_layout = QVBoxLayout()
         main_layout.addWidget(self.stacked_widget)
         self.setLayout(main_layout)

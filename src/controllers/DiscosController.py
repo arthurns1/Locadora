@@ -59,7 +59,7 @@ class DiscosController:
         params = (disco.get_numSessao(), disco.get_codigoGenero(), disco.get_titulo(), disco.get_lancamento(), disco.get_diretor(), disco.get_classInd(), disco.get_codigo())
 
         try:
-            sql = "UPDATE discos SET num_sessao = %s, cod_genero = %s, titulo = %s, lancamento = %s, diretor = %s, classInd = %s  WHERE codigo_disco = %s;"
+            sql = "UPDATE discos SET num_sessao = %s, cod_genero = %s, titulo = %s, lancamento = %s, diretor = %s, class_ind = %s  WHERE codigo_disco = %s;"
             self.db.execute_query(sql, params, False, True)
 
             return True
