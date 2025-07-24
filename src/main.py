@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import (QApplication, QLabel, QVBoxLayout, QWidget, QStackedWidget, QGridLayout, QPushButton, QLineEdit, QListWidget, QPlainTextEdit)
+from PyQt5.QtWidgets import (QApplication, QLabel, QVBoxLayout, QWidget, QStackedWidget, QGridLayout, QPushButton, QLineEdit, QListWidget, QPlainTextEdit, QMessageBox)
 from PyQt5.QtCore import Qt
 
 from controllers.UsuariosController import UsuariosController
@@ -7,19 +7,23 @@ from controllers.SessaoController import SessaoController
 from controllers.DiscosController import DiscosController
 from controllers.GenerosController import GenerosController
 from controllers.EmprestimosController import EmprestimosController
+from controllers.EmprestimoDiscoController import EmprestimoDiscoController
 
 from models.Usuario import Usuario
 from models.Sessao import Sessao
 from models.Disco import Disco
 from models.Genero import Genero
 from models.Emprestimo import Emprestimo  
+from models.EmprestimoDisco import EmprestimoDisco
 
+import datetime
 
 sessaoController = SessaoController()
 usuariosController = UsuariosController()
 discosController = DiscosController()
 generosController = GenerosController()
 emprestimosController = EmprestimosController()
+emprestimoDiscoController = EmprestimoDiscoController()
 
 usuario_atual = Usuario("", "", -1, "", "", "")
 body = {}
@@ -941,14 +945,16 @@ class Emprestimos(QWidget):
         
         self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
         
-        self.adicionar = QPushButton("Fazer empréstimo")
+        self.fazer_emprestimo = QPushButton("Fazer empréstimo")
+        self.fazer_emprestimo.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(21))
+        self.initUI()
         
     def initUI(self):
         layout = QGridLayout()
 
         layout.addWidget(self.voltar, 0, 0)
-        layout.addWidget(self.adicionar, 1, 0)
-        layout.addWidget(self.listar, 2, 0)
+        layout.addWidget(self.fazer_emprestimo, 1, 0)
+
         self.setLayout(layout)
 
 class RealizarEmprestimo(QWidget):
@@ -956,20 +962,52 @@ class RealizarEmprestimo(QWidget):
         super().__init__()
         self.stacked_widget = stacked_widget
 
+        self.recarregar = QPushButton("Recarregar")
         self.voltar = QPushButton("Voltar")
+        
         self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
-
+        self.recarregar.clicked.connect(self.carregar_disco)
+        
         self.titleDiscos = QLabel("Discos:")
         self.discos = QListWidget()
+
+        self.discos.setSelectionMode(QListWidget.ExtendedSelection)
         self.emprestimo = QPushButton("Realizar Empréstimo")
 
         self.emprestimo.clicked.connect(self.handle_emprestimo)
         
         self.initUI()
-    #Terminar depois, lembrando que um usuário poderá fazer apenas 3 emprestimos por vez
-    #caso o usuário já tenha 3 emprestimos, não poderá fazer mais nenhum
+    #Terminar depois, lembrando que um usuário poderá fazer o emprestimo de 3 discos por vez
+    #caso o usuário já tenha 3 feito emprestimo de 3 discos, não poderá fazer mais nenhum
     def handle_emprestimo(self):
-        pass
+        emprestimos_do_usuario = emprestimosController.get_by_cpf_usuario(usuario_atual.get_cpf())
+        quant_discos = 0
+
+        for emprestimo in emprestimos_do_usuario:
+            quant_discos+= emprestimoDiscoController.get_by_emprestimo(emprestimo[0])[0]    
+
+        if quant_discos > 3:
+            return False
+
+        if len(self.discos.selectedItems()) <= 3:
+            emprestimo = Emprestimo(
+                cpfCliente=usuario_atual.get_cpf(),
+                codEmprestimo=0,
+                dataEmprestimo=datetime.datetime.now(),
+                prazo=datetime.datetime.today() + datetime.timedelta(days=7)
+            )
+            codigo_emprestimo = emprestimosController.create(emprestimo=emprestimo)[0][0]
+
+            
+            for disco in self.discos.selectedItems():
+                codigo_disco = disco.text().split(" - ")[1]
+
+                emprestimo_disco = EmprestimoDisco(codigo_disco, codigo_emprestimo, len(self.discos.selectedItems()))
+
+                emprestimoDiscoController.create(emprestimo_disco)
+
+            self.stacked_widget.setCurrentIndex(3)
+            
 
     def initUI(self):
         layout = QGridLayout()
@@ -1071,7 +1109,7 @@ class MenuLogin(QWidget):
     def handle_emprestimos(self):
         global usuario_atual
         if usuario_atual.get_cargo() != "Funcionario":
-            self.stacked_widget.setCurrentIndex(16)
+            self.stacked_widget.setCurrentIndex(20)
 
     def handle_sessao(self):
         global usuario_atual
@@ -1124,6 +1162,7 @@ class MainWindow(QWidget):
         self.editarGeneros = EditarGeneros(self.stacked_widget)
         
         self.emprestimos = Emprestimos(self.stacked_widget)
+        self.realizarEmprestimo = RealizarEmprestimo(self.stacked_widget)
         
         self.stacked_widget.addWidget(self.menuWindow)
         self.stacked_widget.addWidget(self.loginWindow)
@@ -1151,6 +1190,7 @@ class MainWindow(QWidget):
         self.stacked_widget.addWidget(self.editarGeneros)
 
         self.stacked_widget.addWidget(self.emprestimos)
+        self.stacked_widget.addWidget(self.realizarEmprestimo)
 
         main_layout = QVBoxLayout()
         main_layout.addWidget(self.stacked_widget)

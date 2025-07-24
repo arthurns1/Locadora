@@ -13,10 +13,10 @@ class EmprestimosController:
         params = ( emprestimo.get_prazo(), emprestimo.get_dataEmprestimo(), emprestimo.get_cpfCliente())
 
         try:
-            sql = "INSERT INTO emprestimos (codigo_emprestimo, prazo, data_emprestimo, cpf_cliente) VALUES (DEFAULT, %s, %s, %s);"
-            self.db.execute_query(sql, params, False, True)
+            sql = "INSERT INTO emprestimos (codigo_emprestimo, prazo, data_emprestimo, cpf_usuario, ativo) VALUES (DEFAULT, %s, %s, %s, true) RETURNING codigo_emprestimo;"
+            codigo_novo = self.db.execute_query(sql, params, True, True)
 
-            return True
+            return codigo_novo
         except Error as e:
             print(f"Erro ao adicionar emprestimo: {e}")
             return False 
@@ -43,14 +43,28 @@ class EmprestimosController:
             
             return []
 
-    def update(self, emprestimo: Emprestimo):
-        params = (emprestimo.get_prazo(), emprestimo.get_dataEmprestimo(), emprestimo.get_cpfCliente(), emprestimo.get_codigo())
+    def get_by_cpf_usuario(self, cpf_usuario:str):
+        params = (cpf_usuario,)
 
         try:
-            sql = "UPDATE emprestimos SET prazo = %s, data_emprestimo = %s, cpf_cliente = %s WHERE codigo_emprestimo = %s;"
-            self.db.execute_query(sql, params, False, True)
+            sql = "SELECT * FROM emprestimos WHERE cpf_usuario = %s;"
 
-            return True
+            return self.db.execute_query(sql, params, True, False)
+
+        except Error as e:
+            print(f"Houve um erro ao retornar emprestimos: {e}")
+            
+            return []
+    
+    def update(self, emprestimo: Emprestimo):
+        params = (emprestimo.get_prazo(), emprestimo.get_dataEmprestimo(), emprestimo.get_cpfCliente(), emprestimo.get_codEmprestimo())
+
+        try:
+            sql = "UPDATE emprestimos SET prazo = %s, data_emprestimo = %s, cpf_cliente = %s WHERE codigo_emprestimo = %s RETURNING id;"
+    
+            novo_id = self.db.execute_query(sql, params, True, True)
+            
+            return novo_id
         except Error as e:
             print(f"Ocorreu um erro ao alterar disco:{e}")
             
