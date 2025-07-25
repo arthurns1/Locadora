@@ -54,6 +54,19 @@ class DiscosController:
             
             return []
 
+    def get_discos_by_cpf(self, cpf:int):
+        params = (cpf,)
+
+        try:
+            sql = "SELECT * FROM discos WHERE codigo_disco IN (SELECT cod_disco FROM emprestimo_disco WHERE cod_emprestimo IN (SELECT codigo_emprestimo FROM emprestimos WHERE cpf_usuario = '00000000000'));"
+
+            return self.db.execute_query(sql, params, True, False)
+
+        except Error as e:
+            print(f"Houve um erro ao retornar discos: {e}")
+            
+            return []
+        
     def set_emprestado(self, codigo_disco: int, emprestado: bool):
         params = (emprestado, codigo_disco)
 

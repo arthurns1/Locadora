@@ -13,7 +13,7 @@ class EmprestimoDiscoController:
         params = (emprestimo_disco.get_codEmprestimo(), emprestimo_disco.get_codDisco())
 
         try:
-            sql = "INSERT INTO emprestimo_disco ( cod_emprestimo, cod_disco) VALUES (%s, %s);"
+            sql = "INSERT INTO emprestimo_disco (cod_emprestimo, cod_disco) VALUES (%s, %s);"
             self.db.execute_query(sql, params, False, True)
 
             return True
@@ -54,7 +54,6 @@ class EmprestimoDiscoController:
         except Error as e:
             print(f"Houve um erro ao retornar relação empréstimo-disco: {e}")
             return []
-
     
     def get_emprestimo_disco_by_usuario(self, cpf_usuario:str):
         params = (cpf_usuario,)

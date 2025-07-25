@@ -150,6 +150,10 @@ class Register(QWidget):
             show_warning_message_box("Login muito curto")
             return False
 
+        if usuariosController.get_by_login(login):
+            show_warning_message_box("Este login já existe")
+            return False
+        
         if len(senha) < 3: 
             show_warning_message_box("Senha muito curta")
             return False
@@ -158,7 +162,7 @@ class Register(QWidget):
             show_warning_message_box("Idade inválida")
             return False 
     
-        if len(cpf) != 11:
+        if len(cpf) != 11 or usuariosController.get_by_cpf(cpf):
             show_warning_message_box("Insira um CPF válido")
             return False
 
@@ -934,7 +938,11 @@ class Emprestimos(QWidget):
         self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
         
         self.fazer_emprestimo = QPushButton("Fazer empréstimo")
+        self.realizar_devolucao = QPushButton("Realizar devolução")
+        
         self.fazer_emprestimo.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(21))
+        self.realizar_devolucao.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(22))
+         
         self.initUI()
         
     def initUI(self):
@@ -942,6 +950,7 @@ class Emprestimos(QWidget):
 
         layout.addWidget(self.voltar, 0, 0)
         layout.addWidget(self.fazer_emprestimo, 1, 0)
+        layout.addWidget(self.realizar_devolucao, 2, 0)
 
         self.setLayout(layout)
 
@@ -963,8 +972,6 @@ class RealizarEmprestimo(QWidget):
         self.emprestimo = QPushButton("Realizar Empréstimo")
 
         self.emprestimo.clicked.connect(self.handle_emprestimo)
-
-        self.error_message = QMessageBox()
         
         self.initUI()
 
@@ -1017,6 +1024,55 @@ class RealizarEmprestimo(QWidget):
 
         for disco in discos:
             self.discos.addItem(disco[3] + " - " + str(disco[0]))
+
+class RealizarDevolucao(QWidget):
+    def __init__(self, stacked_widget: QStackedWidget):
+        super().__init__()
+        self.stacked_widget = stacked_widget
+
+        self.voltar = QPushButton("Voltar")
+        
+        self.voltar.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
+        
+        self.titleDiscos = QLabel("Discos:")
+        self.discos = QListWidget()
+
+        self.discos.setSelectionMode(QListWidget.ExtendedSelection)
+        self.devolver = QPushButton("Devolver")
+
+        self.devolver.clicked.connect(self.handle_devolver)
+        
+        self.initUI()
+
+    def handle_devolver(self):
+        if self.discos.selectedItems():
+            for disco in self.discos.selectedItems():
+                codigo_disco = disco.text().split(" - ")[1]
+                emprestimoDiscoController.delete_by_disco(codigo_disco)
+            
+            self.carregar_disco()
+
+            self.stacked_widget.setCurrentIndex(3)
+    
+    def initUI(self):
+        layout = QGridLayout()
+
+        self.carregar_disco()
+        
+        layout.addWidget(self.voltar, 0, 0)
+        layout.addWidget(self.titleDiscos, 1, 0)
+        layout.addWidget(self.discos, 2, 0)
+        layout.addWidget(self.devolver, 3, 0)
+        
+        self.setLayout(layout)
+
+    def carregar_disco(self):
+        self.discos.clear()
+        discos = discosController.get_discos_by_cpf(usuario_atual.get_cpf())
+
+        for disco in discos:
+            self.discos.addItem(disco[3] + " - " + str(disco[0]))
+
 
 class Menu(QWidget):
     def __init__(self, stacked_widget: QStackedWidget):
@@ -1163,6 +1219,7 @@ class MainWindow(QWidget):
         
         self.emprestimos = Emprestimos(self.stacked_widget)
         self.realizarEmprestimo = RealizarEmprestimo(self.stacked_widget)
+        self.realizarDevolucao = RealizarDevolucao(self.stacked_widget)
         
         self.stacked_widget.addWidget(self.menuWindow)
         self.stacked_widget.addWidget(self.loginWindow)
@@ -1191,6 +1248,7 @@ class MainWindow(QWidget):
 
         self.stacked_widget.addWidget(self.emprestimos)
         self.stacked_widget.addWidget(self.realizarEmprestimo)
+        self.stacked_widget.addWidget(self.realizarDevolucao)
 
         main_layout = QVBoxLayout()
         main_layout.addWidget(self.stacked_widget)
