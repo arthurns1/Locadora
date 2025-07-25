@@ -16,6 +16,8 @@ from models.Genero import Genero
 from models.Emprestimo import Emprestimo  
 from models.EmprestimoDisco import EmprestimoDisco
 
+from functions.show_warning_message_box import show_warning_message_box
+
 import datetime
 
 sessaoController = SessaoController()
@@ -28,7 +30,6 @@ emprestimoDiscoController = EmprestimoDiscoController()
 usuario_atual = Usuario("", "", -1, "", "", "")
 body = {}
 
-
 class Login(QWidget):    
     def __init__(self, stacked_widget: QStackedWidget):
         super().__init__()
@@ -37,7 +38,6 @@ class Login(QWidget):
         self.login = QLineEdit()
         self.titleSenha = QLabel("Senha:")
         self.senha = QLineEdit()
-        self.error = QLabel()
         self.loginButton = QPushButton("Logar")
         self.loginButton.clicked.connect(lambda: self.handleLogin())
         
@@ -64,10 +64,8 @@ class Login(QWidget):
         layout.addWidget(self.titleSenha, 1, 0)
 
         layout.addWidget(self.senha, 1, 1)
-
-        layout.addWidget(self.error, 2, 0)
         
-        layout.addWidget(self.loginButton, 3,0)
+        layout.addWidget(self.loginButton, 2,0)
 
         self.setLayout(layout)
 
@@ -76,17 +74,14 @@ class Login(QWidget):
         self.usuario = usuariosController.get_by_login(self.login.text())
         
         if len(self.usuario) == 0:
-            self.show_error_message("Usuário não encontrado")
+            show_warning_message_box("Usuário não encontrado")
             return False
 
         if self.usuario[0][1] != self.senha.text():
-            self.show_error_message("Senha incorreta")
+            show_warning_message_box("Senha incorreta")
             return False
 
         return True
-
-    def show_error_message(self, error_message:str):
-        self.error.setText(error_message)
 
     def handleLogin(self):      
         if self.check_info():
@@ -110,7 +105,6 @@ class Register(QWidget):
         self.idade = QLineEdit()
         self.title5 = QLabel("CPF:")
         self.cpf = QLineEdit()
-        self.error = QLabel()
         self.registerButton = QPushButton("Registrar")
 
         self.registerButton.clicked.connect(lambda: self.handleRegister())
@@ -130,7 +124,6 @@ class Register(QWidget):
         layout.addWidget(self.idade, 3, 1)        
         layout.addWidget(self.title5,4 ,0)
         layout.addWidget(self.cpf, 4, 1)
-        layout.addWidget(self.error, 6, 1)
         layout.addWidget(self.registerButton, 7, 0)        
         
         self.setLayout(layout)
@@ -150,29 +143,26 @@ class Register(QWidget):
         
     def check_info(self, nome, login, idade, senha, cpf):
         if len(nome) < 3:
-            self.show_error_message("Nome muito curto")
+            show_warning_message_box("Nome muito curto")
             return False
 
         if len(login) < 3:
-            self.show_error_message("Login muito curto")
+            show_warning_message_box("Login muito curto")
             return False
 
         if len(senha) < 3: 
-            self.show_error_message("Senha muito curta")
+            show_warning_message_box("Senha muito curta")
             return False
 
         if len(idade) <= 0:
-            self.show_error_message("Idade inválida")
+            show_warning_message_box("Idade inválida")
             return False 
     
         if len(cpf) != 11:
-            self.show_error_message("Insira um CPF válido")
+            show_warning_message_box("Insira um CPF válido")
             return False
 
         return True
-
-    def show_error_message(self, error_message:str):
-        self.error.setText(error_message)
 
 class Funcionarios(QWidget):
     def __init__(self, stacked_widget:QStackedWidget):
@@ -609,7 +599,6 @@ class AdicionarDiscos(QWidget):
             classInd=self.class_ind.text(),
             codigoGenero= self.genero.currentItem().text().split(" - ")[0],
             numSessao=self.sessao.currentItem().text().split(" - ")[0],
-            emprestado=False
         )
 
         if disco:
@@ -688,8 +677,7 @@ class ListarDiscos(QWidget):
         discos = discosController.get_all()
 
         for disco in discos:
-            if not disco[7]:
-                self.lista.addItem(str(disco[0]) + " - " + disco[3])
+            self.lista.addItem(str(disco[0]) + " - " + disco[3])
 
 class EditarDiscos(QWidget):
     def __init__(self, stacked_widget: QStackedWidget):
@@ -975,39 +963,40 @@ class RealizarEmprestimo(QWidget):
         self.emprestimo = QPushButton("Realizar Empréstimo")
 
         self.emprestimo.clicked.connect(self.handle_emprestimo)
+
+        self.error_message = QMessageBox()
         
         self.initUI()
-    #Terminar depois, lembrando que um usuário poderá fazer o emprestimo de 3 discos por vez
-    #caso o usuário já tenha 3 feito emprestimo de 3 discos, não poderá fazer mais nenhum
+
     def handle_emprestimo(self):
-        emprestimos_do_usuario = emprestimosController.get_by_cpf_usuario(usuario_atual.get_cpf())
-        quant_discos = 0
+        quant_discos = len(emprestimoDiscoController.get_emprestimo_disco_by_usuario(usuario_atual.get_cpf()))
 
-        for emprestimo in emprestimos_do_usuario:
-            quant_discos+= emprestimoDiscoController.get_by_emprestimo(emprestimo[0])[0]    
-
-        if quant_discos > 3:
-            return False
-
-        if len(self.discos.selectedItems()) <= 3:
+        if len(self.discos.selectedItems()) + quant_discos <= 3:
             emprestimo = Emprestimo(
                 cpfCliente=usuario_atual.get_cpf(),
                 codEmprestimo=0,
                 dataEmprestimo=datetime.datetime.now(),
                 prazo=datetime.datetime.today() + datetime.timedelta(days=7)
             )
-            codigo_emprestimo = emprestimosController.create(emprestimo=emprestimo)[0][0]
 
-            
+            codigo_emprestimo = emprestimosController.create(emprestimo=emprestimo)[0][0]
+        
             for disco in self.discos.selectedItems():
                 codigo_disco = disco.text().split(" - ")[1]
 
-                emprestimo_disco = EmprestimoDisco(codigo_disco, codigo_emprestimo, len(self.discos.selectedItems()))
+                emprestimo_disco = EmprestimoDisco(codigo_disco, codigo_emprestimo)
 
                 emprestimoDiscoController.create(emprestimo_disco)
 
+            self.carregar_disco()
+
             self.stacked_widget.setCurrentIndex(3)
-            
+
+            return True
+        show_warning_message_box("Só é permitido o empréstimo de no MÁXIMO 3 discos")
+        self.stacked_widget.setCurrentIndex(3)
+        
+        return False
 
     def initUI(self):
         layout = QGridLayout()
@@ -1015,18 +1004,19 @@ class RealizarEmprestimo(QWidget):
         self.carregar_disco()
         
         layout.addWidget(self.voltar, 0, 0)
+        layout.addWidget(self.recarregar, 0, 1)
         layout.addWidget(self.titleDiscos, 1, 0)
         layout.addWidget(self.discos, 2, 0)
         layout.addWidget(self.emprestimo, 3, 0)
         
         self.setLayout(layout)
-        
+
     def carregar_disco(self):
         self.discos.clear()
-        discos = discosController.get_all()
+        discos = discosController.get_not_emprestados()
+
         for disco in discos:
-            if not disco[7]:
-                self.discos.addItem(disco[3] + " - " + str(disco[0]))
+            self.discos.addItem(disco[3] + " - " + str(disco[0]))
 
 class Menu(QWidget):
     def __init__(self, stacked_widget: QStackedWidget):
@@ -1105,26 +1095,36 @@ class MenuLogin(QWidget):
         global usuario_atual
         if usuario_atual.get_cargo() == "Funcionario" or usuario_atual.get_cargo() == "Admin":
             self.stacked_widget.setCurrentIndex(12)
+        else:
+            show_warning_message_box("Acesso negado")
             
     def handle_emprestimos(self):
         global usuario_atual
         if usuario_atual.get_cargo() != "Funcionario":
             self.stacked_widget.setCurrentIndex(20)
+        else:
+            show_warning_message_box("Acesso negado")
 
     def handle_sessao(self):
         global usuario_atual
         if usuario_atual.get_cargo() == "Funcionario" or usuario_atual.get_cargo() == "Admin":
             self.stacked_widget.setCurrentIndex(8)
+        else:
+            show_warning_message_box("Acesso negado")
 
     def handle_funcionarios(self):
         global usuario_atual
         if usuario_atual.get_cargo() == "Admin":    
             self.stacked_widget.setCurrentIndex(4)
+        else:
+            show_warning_message_box("Acesso negado")
 
     def handle_generos(self):
         global usuario_atual
         if usuario_atual.get_cargo() == "Funcionario" or usuario_atual.get_cargo() == "Admin":
             self.stacked_widget.setCurrentIndex(16)
+        else:
+            show_warning_message_box("Acesso negado")
 
 class MainWindow(QWidget):
     def __init__(self):

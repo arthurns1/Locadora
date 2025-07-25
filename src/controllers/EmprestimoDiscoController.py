@@ -10,10 +10,10 @@ class EmprestimoDiscoController:
         self.db = Database()
 
     def create(self, emprestimo_disco:EmprestimoDisco):
-        params = (emprestimo_disco.get_quantidade(), emprestimo_disco.get_codEmprestimo(), emprestimo_disco.get_codDisco())
+        params = (emprestimo_disco.get_codEmprestimo(), emprestimo_disco.get_codDisco())
 
         try:
-            sql = "INSERT INTO emprestimo_disco (quantidade, cod_emprestimo, cod_disco) VALUES (%s, %s, %s);"
+            sql = "INSERT INTO emprestimo_disco ( cod_emprestimo, cod_disco) VALUES (%s, %s);"
             self.db.execute_query(sql, params, False, True)
 
             return True
@@ -55,6 +55,19 @@ class EmprestimoDiscoController:
             print(f"Houve um erro ao retornar relação empréstimo-disco: {e}")
             return []
 
+    
+    def get_emprestimo_disco_by_usuario(self, cpf_usuario:str):
+        params = (cpf_usuario,)
+        
+        try:
+            sql = "SELECT * FROM emprestimo_disco WHERE cod_emprestimo IN (SELECT emprestimos.codigo_emprestimo FROM emprestimos WHERE cpf_usuario = %s);"
+
+            return self.db.execute_query(sql, params, True, False)
+
+        except Error as e:
+            print(f"Houve um erro ao retornar emprestimos: {e}")
+            
+            return []
 
     def get_by_genero_sessao(self, cod_emprestimo: int, cod_disco: int):
         params = (cod_emprestimo, cod_disco)

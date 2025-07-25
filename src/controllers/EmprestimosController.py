@@ -55,6 +55,7 @@ class EmprestimosController:
             print(f"Houve um erro ao retornar emprestimos: {e}")
             
             return []
+
     
     def update(self, emprestimo: Emprestimo):
         params = (emprestimo.get_prazo(), emprestimo.get_dataEmprestimo(), emprestimo.get_cpfCliente(), emprestimo.get_codEmprestimo())

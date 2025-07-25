@@ -10,10 +10,10 @@ class DiscosController:
         self.db = Database()
 
     def create(self, disco: Disco):
-        params = (disco.get_numSessao(), disco.get_codigoGenero(), disco.get_titulo(), disco.get_lancamento(), disco.get_diretor(), disco.get_classInd(), disco.is_emprestado())
+        params = (disco.get_numSessao(), disco.get_codigoGenero(), disco.get_titulo(), disco.get_lancamento(), disco.get_diretor(), disco.get_classInd())
 
         try:
-            sql = "INSERT INTO discos (codigo_disco, num_sessao, cod_genero, titulo, lancamento, diretor, class_ind, emprestado) VALUES (DEFAULT, %s, %s, %s, %s, %s, %s, %s);"
+            sql = "INSERT INTO discos (codigo_disco, num_sessao, cod_genero, titulo, lancamento, diretor, class_ind) VALUES (DEFAULT, %s, %s, %s, %s, %s, %s);"
             self.db.execute_query(sql, params, False, True)
 
             return True
@@ -29,6 +29,17 @@ class DiscosController:
         except Error as e:
             print(f"Ocorreu um erro ao retornar discos: {e}")
             return []
+
+    
+    def get_not_emprestados(self):
+        try:
+            sql = "SELECT * FROM discos WHERE NOT EXISTS (SELECT * FROM emprestimo_disco WHERE discos.codigo_disco = emprestimo_disco.cod_disco);"
+            return self.db.execute_query(sql, (), True, False)
+        
+        except Error as e:
+            print(f"Ocorreu um erro ao retornar discos: {e}")
+            return []
+
 
     def get_by_codigo(self, codigo_disco: int):
         params = (codigo_disco,)

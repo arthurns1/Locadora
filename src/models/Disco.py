@@ -1,7 +1,7 @@
 import datetime
 
 class Disco:
-    def __init__(self, codigo:int, numSessao:int, codigoGenero: int, titulo:str, lancamento:int, diretor:str, classInd: int, emprestado: bool):
+    def __init__(self, codigo:int, numSessao:int, codigoGenero: int, titulo:str, lancamento:int, diretor:str, classInd: int):
         self.__codigo = codigo
         self.__numSessao = numSessao
         self.__codigoGenero = codigoGenero
@@ -9,7 +9,6 @@ class Disco:
         self.__lancamento = lancamento
         self.__diretor = diretor
         self.__classInd = classInd
-        self.__emprestado = emprestado
 
     def get_codigo(self):
         return self.__codigo
@@ -32,9 +31,6 @@ class Disco:
     def get_numSessao(self):
         return self.__numSessao
 
-    def is_emprestado(self):
-        return self.__emprestado
-
     def set_codigo(self, codigo: str):
         self.__codigo = codigo
 
@@ -52,6 +48,3 @@ class Disco:
 
     def set_classInd(self, classInd: int):
         self.__classInd = classInd
-
-    def set_emprestado(self, emprestado: bool):
-        self.__emprestado = emprestado
